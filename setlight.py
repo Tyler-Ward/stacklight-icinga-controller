@@ -29,10 +29,11 @@ headers = {
         'X-HTTP-Method-Override': 'GET'
         }
 requestdata = {
-        "attrs": [ "name", "state", "state_type", "last_hard_state", "acknowledgement"],
+        "attrs": [ "name", "state", "state_type", "last_hard_state", "acknowledgement", "downtime_depth"],
         "joins": [ "host.name", "host.state"],
 }
 
+requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
 while True:
     r = requests.post(request_url,
@@ -41,21 +42,21 @@ while True:
             data=json.dumps(requestdata),
             verify=False)
 
-    maxstate=0;
+    states={}
 
     if (r.status_code == 200):
         data = r.json()
         for service in data["results"]:
-            if service["attrs"]["last_hard_state"]>maxstate and service["attrs"]["acknowledgement"] == 0:
-                maxstate = service["attrs"]["state"]
+            if service["attrs"]["acknowledgement"] == 0 and service["attrs"]["downtime_depth"] == 0:
+                states[int(service["attrs"]["state"])] = states.get(int(service["attrs"]["state"]),0)+1
 
         colour="off"
-        if maxstate == 0:
-            colour="off"
-        elif maxstate == 1:
+        if states.get(2,0)>=1:
+            colour="red"
+        elif states.get(1,0)>=1:
             colour="yellow"
         else:
-            colour="red"
+            colour="off"
 
         print("setting to {}".format(colour))
         r = requests.post(
