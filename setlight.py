@@ -48,7 +48,7 @@ while True:
         data = r.json()
         for service in data["results"]:
             if service["attrs"]["acknowledgement"] == 0 and service["attrs"]["downtime_depth"] == 0:
-                states[int(service["attrs"]["state"])] = states.get(int(service["attrs"]["state"]),0)+1
+                states[int(service["attrs"]["last_hard_state"])] = states.get(int(service["attrs"]["last_hard_state"]),0)+1
 
         colour="off"
         if states.get(2,0)>=1:
